@@ -1,0 +1,68 @@
+# =============================================================================
+# Retrieval service dependencies (lean, runtime-only).
+# =============================================================================
+# This is the dependency set for the RETRIEVAL API (retrieval_new.py +
+# query_router.py + tool_store.py) and the service.sources.* / service.api_*
+# modules it reuses for the database/api/cloud_storage tool kinds.
+#
+# It deliberately EXCLUDES the heavy ingestion stack (torch, docling,
+# unstructured, pymupdf) which the retrieval path never imports. Versions are
+# pinned to match the project-root requirements.txt so the two environments
+# stay consistent.
+#
+# NOTE on optional connectors:
+#   * transformers (services.tokenizer_service) is only imported when the
+#     `api` tool kind runs through APISource. It is NOT installed here by
+#     default to keep the image small. If you use `kind:"api"` tools, install
+#     the "API tool kind" extras below.
+#   * google-cloud-storage / azure-storage-blob are only needed for the
+#     `cloud_storage` tool kind. Enable the "Cloud storage tool kind" block
+#     if you use S3/GCS/Azure tools.
+# =============================================================================
+
+# --- Web framework -----------------------------------------------------------
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# --- Core / validation / config ---------------------------------------------
+pydantic==2.12.5
+python-dotenv==1.0.1
+
+# --- AWS (Bedrock embeddings + answer generation via boto3) ------------------
+boto3==1.42.47
+
+# --- HTTP & networking -------------------------------------------------------
+requests==2.32.3
+httpx==0.27.2
+certifi==2024.12.14
+
+# --- Vector store backends ---------------------------------------------------
+# Qdrant is called over HTTP via `requests`, but qdrant-client is kept for
+# parity with the rest of the codebase / future use.
+qdrant-client==1.16.2
+pinecone==5.4.2
+redis==7.4.0
+pymongo==4.10.1
+
+# --- Relational backends (PGVector retrieval + `database` tool kind) ---------
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.11
+pymysql==1.1.1
+pandas==2.2.3
+
+# --- Tokenization (tiktoken used by some helpers) ----------------------------
+tiktoken==0.12.0
+
+# =============================================================================
+# OPTIONAL EXTRAS — uncomment the block for the tool kinds you actually use.
+# =============================================================================
+
+# --- `api` tool kind (services.api_source_service -> tokenizer_service) ------
+# Pulls in HuggingFace transformers for token counting during API ingestion.
+# Large (~hundreds of MB). Only needed for kind:"api" tools.
+# transformers==4.57.3
+
+# --- `cloud_storage` tool kind (services.sources.cloud_storage_source) -------
+# Only needed for kind:"cloud_storage" tools (S3 uses boto3 already).
+# google-cloud-storage==2.18.2
+# azure-storage-blob==12.26.0

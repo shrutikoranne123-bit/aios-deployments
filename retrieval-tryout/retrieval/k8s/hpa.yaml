@@ -1,0 +1,27 @@
+# =============================================================================
+# HorizontalPodAutoscaler — scales the retrieval Deployment on CPU load.
+# =============================================================================
+# Requires the metrics-server to be installed in the cluster. Tune min/max
+# replicas and the CPU target to your traffic.
+# =============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rag-retrieval
+  namespace: dev
+  labels:
+    app: rag-retrieval
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rag-retrieval
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

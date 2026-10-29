@@ -1,0 +1,11 @@
+**/.env
+**/.env.*
+!**/.env.example
+**/__pycache__
+**/*.pyc
+**/.git
+**/node_modules
+**/*.pem
+**/*.key
+retrieval/tool_configs.json*
+retrieval/k8s

@@ -1,0 +1,21 @@
+# =============================================================================
+# Service — exposes the retrieval Deployment inside the cluster.
+# =============================================================================
+# ClusterIP (internal) by default. To expose externally, either add an Ingress
+# (see ingress.yaml) or change the type to LoadBalancer.
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-retrieval
+  namespace: dev
+  labels:
+    app: rag-retrieval
+spec:
+  type: ClusterIP
+  selector:
+    app: rag-retrieval
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

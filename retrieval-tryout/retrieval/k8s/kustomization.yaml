@@ -1,0 +1,28 @@
+# =============================================================================
+# Kustomization — apply all retrieval manifests together.
+# =============================================================================
+#   kubectl apply -k retrieval/k8s
+#
+# To change the image tag without editing deployment.yaml, use the `images`
+# block below (uncomment and set newTag), or run:
+#   cd retrieval/k8s && kustomize edit set image \
+#     410133709370.dkr.ecr.ap-south-1.amazonaws.com/asmaaios-rag-retrieval=...:v2
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dev
+
+commonLabels:
+  app: rag-retrieval
+
+resources:
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+  # - ingress.yaml   # uncomment to expose the API externally
+
+# images:
+#   - name: 410133709370.dkr.ecr.ap-south-1.amazonaws.com/asmaaios-rag-retrieval
+#     newTag: v1

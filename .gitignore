@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+retrieval-tryout/retrieval/k8s/secret.yaml
+__pycache__/
+*.pyc

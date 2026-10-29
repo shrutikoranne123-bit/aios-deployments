@@ -1,0 +1,43 @@
+# =============================================================================
+# Retrieval API — local / single-host deployment.
+# =============================================================================
+# Build context is the repo ROOT (..) so the image can include the top-level
+# `services/` package the retrieval code imports.
+#
+#   cd retrieval
+#   cp .env.example .env            # then fill in AWS_REGION etc.
+#   docker compose up --build
+#
+# The API is then available at http://localhost:8000
+#   - Swagger UI : http://localhost:8000/docs
+#   - Health     : http://localhost:8000/retrieve/health
+# =============================================================================
+
+services:
+  retrieval-api:
+    build:
+      context: ..
+      dockerfile: retrieval/Dockerfile
+    image: asma-retrieval:latest
+    container_name: asma-retrieval
+    env_file:
+      - .env
+    environment:
+      PORT: "8000"
+      UVICORN_WORKERS: "1"
+      TOOL_STORE_PATH: /app/data/tool_configs.json
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist saved tool-calling configs across restarts.
+      - retrieval-tool-store:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/retrieve/health',timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  retrieval-tool-store:

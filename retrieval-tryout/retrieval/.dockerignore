@@ -1,0 +1,54 @@
+# Build context is the repo ROOT (see retrieval/Dockerfile). Keep the image
+# lean and never ship secrets or the ingestion-only trees.
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs & local output (not needed by the retrieval service)
+logs/
+*.log
+output/
+output_files/
+markdown_output/
+temp/
+
+# Secrets / local config — provided at runtime via --env-file / k8s Secret
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+retrieval/tool_configs.json
+retrieval/tool_configs.json.lock
+retrieval/tool_configs.json.tmp
+
+# Ingestion-only trees the retrieval image does NOT need. These are large
+# (model weights, docs, k8s) and must not bloat the image.
+docling_service/
+docs/
+k8s/
+edit_chunk/
+tests/
+.git/
+.DS_Store

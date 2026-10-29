@@ -1,0 +1,91 @@
+# =============================================================================
+# Retrieval API — long-running HTTP Deployment.
+# =============================================================================
+# Build & push the image (from the repo ROOT) before applying:
+#   docker build -f retrieval/Dockerfile \
+#     -t 410133709370.dkr.ecr.ap-south-1.amazonaws.com/asmaaios-rag-retrieval:v1 .
+#   docker push 410133709370.dkr.ecr.ap-south-1.amazonaws.com/asmaaios-rag-retrieval:v1
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-retrieval
+  namespace: dev
+  labels:
+    app: rag-retrieval
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rag-retrieval
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: rag-retrieval
+    spec:
+      # serviceAccountName: rag-retrieval   # <- bind an IRSA role here for Bedrock
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: rag-retrieval
+          image: 410133709370.dkr.ecr.ap-south-1.amazonaws.com/asmaaios-rag-retrieval:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: UVICORN_WORKERS
+              value: "1"
+            - name: TOOL_STORE_PATH
+              value: /app/data/tool_configs.json
+          envFrom:
+            - secretRef:
+                name: rag-retrieval-env
+          volumeMounts:
+            - name: tool-store
+              mountPath: /app/data
+          readinessProbe:
+            httpGet:
+              path: /retrieve/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 4
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /retrieve/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 4
+            failureThreshold: 3
+          resources:
+            # The retrieval service is I/O-bound (network calls to vector stores
+            # + Bedrock), not CPU/GPU heavy. Tune to your cluster.
+            requests:
+              cpu: "250m"
+              memory: 512Mi
+            limits:
+              cpu: "1000m"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   # tool_store writes under /app/data
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        # Ephemeral writable dir for the tool_store. Saved /tools configs do
+        # NOT persist across pod restarts. If you need persistence, add a PVC
+        # and point this volume at it instead.
+        - name: tool-store
+          emptyDir: {}

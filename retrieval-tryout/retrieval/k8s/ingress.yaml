@@ -1,0 +1,37 @@
+# =============================================================================
+# Ingress — OPTIONAL external access to the retrieval API.
+# =============================================================================
+# Only needed if you expose the API outside the cluster via an ingress
+# controller (nginx / ALB / etc.). Adjust the ingressClassName, host, and
+# annotations for your environment. If you don't use an Ingress, delete this
+# file (it is NOT referenced by kustomization.yaml by default).
+#
+# To enable: add "- ingress.yaml" to the resources list in kustomization.yaml.
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rag-retrieval
+  namespace: dev
+  labels:
+    app: rag-retrieval
+  annotations:
+    # Example for the AWS Load Balancer Controller (ALB). Replace/remove for
+    # your controller (e.g. nginx):
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/scheme: internal
+    # alb.ingress.kubernetes.io/target-type: ip
+    {}
+spec:
+  # ingressClassName: alb
+  rules:
+    - host: rag-retrieval.dev.example.com   # <- change to your host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rag-retrieval
+                port:
+                  number: 80
